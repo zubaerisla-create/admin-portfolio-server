@@ -6,13 +6,22 @@ const morgan = require("morgan");
 const connectDB = require("./config/db");
 const cloudinary = require("./config/cloudinary");
 
-// Connect to MongoDB
-connectDB();
-
 // Initialize Cloudinary
 console.log("✅ Cloudinary initialized with cloud name:", process.env.CLOUDINARY_CLOUD_NAME);
 
 const app = express();
+
+// Connect to MongoDB before every request (required for serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("❌ DB connection failed:", err.message);
+    res.status(500).json({ success: false, message: "Database connection failed" });
+  }
+});
+
 
 // Middleware
 app.use(helmet());                        // Security headers
